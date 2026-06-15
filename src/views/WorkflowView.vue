@@ -110,7 +110,6 @@ const phases = [
 
             <!-- 액터 박스 -->
             <div class="wf-actor" :class="{ 'wf-actor-ours': actor.ours }" :style="{ borderTopColor: actor.color }">
-              <div class="wf-ours-badge" v-if="actor.ours">우리 팀</div>
               <div class="wf-actor-hd">
                 <div class="wf-icon" :style="{ background: actor.color }">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

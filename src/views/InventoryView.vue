@@ -2,9 +2,9 @@
 import { ref, computed } from 'vue'
 import { aiServices, registrationRequests } from '../data/services.js'
 
-const props = defineProps({ onOpenDetail: Function })
+const props = defineProps({ onOpenDetail: Function, initialTab: { type: String, default: '목록' } })
 
-const activeTab = ref('목록')
+const activeTab = ref(props.initialTab)
 
 // 서비스 목록 필터
 const selectedProduct = ref('전체')

@@ -7,6 +7,7 @@ import ComplianceView from './views/ComplianceView.vue'
 import { aiServices, complianceItems } from './data/services.js'
 
 const activeNav = ref('dashboard')
+const inventoryTab = ref('목록')
 const showModal = ref(false)
 const selectedService = ref(null)
 
@@ -78,8 +79,8 @@ const qualityChartData = computed(() => {
 
     <main class="main">
       <WorkflowView v-if="activeNav === 'workflow'" />
-      <DashboardView v-else-if="activeNav === 'dashboard'" :on-open-detail="openDetail" :on-navigate="nav => activeNav = nav" />
-      <InventoryView v-else-if="activeNav === 'inventory'" :on-open-detail="openDetail" />
+      <DashboardView v-else-if="activeNav === 'dashboard'" :on-open-detail="openDetail" :on-navigate="(nav, tab) => { activeNav = nav; if (tab) inventoryTab = tab }" />
+      <InventoryView v-else-if="activeNav === 'inventory'" :on-open-detail="openDetail" :initial-tab="inventoryTab" />
       <ComplianceView v-else-if="activeNav === 'compliance'" />
 
     </main>

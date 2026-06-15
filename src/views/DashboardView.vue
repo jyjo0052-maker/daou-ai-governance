@@ -137,7 +137,7 @@ function getAlertReasons(s) {
         </div>
       </div>
 
-      <div class="kpi-card kpi-clickable" :class="pendingRegistrations.length > 0 ? 'kpi-warn' : ''" @click="onNavigate('inventory')">
+      <div class="kpi-card kpi-clickable" :class="pendingRegistrations.length > 0 ? 'kpi-warn' : ''" @click="onNavigate('inventory', '등록 요청')">
         <div class="kpi-header">
           <span class="kpi-label">신규 등록 요청</span>
           <div class="kpi-icon" :class="pendingRegistrations.length > 0 ? 'kpi-icon-orange' : 'kpi-icon-blue'">
@@ -194,7 +194,7 @@ function getAlertReasons(s) {
       <section class="table-section">
         <div class="table-header">
           <h3 class="section-title">신규 AI 등록 요청</h3>
-          <button class="btn-link" @click="onNavigate('inventory')">
+          <button class="btn-link" @click="onNavigate('inventory', '등록 요청')">
             전체 보기
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -209,7 +209,7 @@ function getAlertReasons(s) {
               <tr><th>요청일</th><th>제품</th><th>AI 기능명</th><th>등급</th><th>상태</th></tr>
             </thead>
             <tbody>
-              <tr v-for="r in pendingRegistrations" :key="r.id" class="table-row" @click="onNavigate('inventory')">
+              <tr v-for="r in pendingRegistrations" :key="r.id" class="table-row" @click="onNavigate('inventory', '등록 요청')">
                 <td class="date-cell">{{ r.requestDate }}</td>
                 <td><span class="product-tag-sm" :class="'product-' + r.product">{{ r.product }}</span></td>
                 <td><span class="feature-name">{{ r.feature }}</span></td>

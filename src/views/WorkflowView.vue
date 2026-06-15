@@ -1,15 +1,5 @@
 <script setup>
-const execActor = {
-  name: '경영진',
-  role: '전략 방향 · 최종 의사결정',
-  color: '#263238',
-  menus: [
-    { title: '요약 대시보드', items: ['전사 AI 위험 현황 요약', 'AI 유형별 분포', '월별 전사 평균 품질 점수 추이'] },
-    { title: '규제 대응 현황 요약', items: ['이슈 대응 보고서 열람', '현재 적용 중인 규제 목록 및 준수율', '외부 감사 대응 리포트'] },
-  ],
-}
-
-const mainActors = [
+const actors = [
   {
     name: 'AI 운영부서',
     role: '서비스 개발 · 운영 · 이행',
@@ -44,11 +34,22 @@ const mainActors = [
       { title: '규제 준수 현황', items: ['규제 항목별 세부 준수 현황', '규제 의무 항목 관리', '이슈 대응 관리'] },
     ],
   },
+  {
+    name: '경영진',
+    role: '전략 방향 · 최종 의사결정',
+    color: '#263238',
+    tag: '경영진',
+    menus: [
+      { title: '요약 대시보드', items: ['전사 AI 위험 현황 요약', 'AI 유형별 분포', '월별 전사 평균 품질 점수 추이'] },
+      { title: '규제 대응 현황 요약', items: ['이슈 대응 보고서 열람', '현재 적용 중인 규제 목록 및 준수율', '외부 감사 대응 리포트'] },
+    ],
+  },
 ]
 
 const connectors = [
   { fwd: '등록 신청', back: '승인 / 반려' },
   { fwd: '검토 의견서', back: '검토 요청' },
+  { fwd: '정기 보고', back: '전략 방향' },
 ]
 
 const phases = [
@@ -101,151 +102,65 @@ const phases = [
 
     <!-- 다이어그램 -->
     <section class="wf-card">
-      <div class="wf-grid">
+      <div class="wf-diagram">
 
-        <!-- [col5 / row1] 경영진 -->
-        <div class="wf-cell-exec">
-          <div class="wf-actor" :style="{ borderTopColor: execActor.color }">
-            <div class="wf-actor-hd">
-              <div class="wf-icon" :style="{ background: execActor.color }">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <!-- 액터 + 커넥터 한 줄 -->
+        <div class="wf-row">
+          <template v-for="(actor, idx) in actors" :key="actor.name">
+
+            <!-- 액터 박스 -->
+            <div class="wf-actor" :class="{ 'wf-actor-ours': actor.ours }" :style="{ borderTopColor: actor.color }">
+              <div class="wf-ours-badge" v-if="actor.ours">우리 팀</div>
+              <div class="wf-actor-hd">
+                <div class="wf-icon" :style="{ background: actor.color }">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <template v-if="idx === 0"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></template>
+                    <template v-else-if="idx === 1"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></template>
+                    <template v-else-if="idx === 2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></template>
+                    <template v-else><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></template>
+                  </svg>
+                </div>
+                <div>
+                  <div class="wf-actor-name">{{ actor.name }}</div>
+                  <div class="wf-actor-role">{{ actor.role }}</div>
+                </div>
               </div>
-              <div>
-                <div class="wf-actor-name">{{ execActor.name }}</div>
-                <div class="wf-actor-role">{{ execActor.role }}</div>
+              <div class="wf-menus">
+                <div v-for="m in actor.menus" :key="m.title" class="wf-menu">
+                  <div class="wf-menu-title">{{ m.title }}</div>
+                  <ul class="wf-menu-list">
+                    <li v-for="it in m.items" :key="it">{{ it }}</li>
+                  </ul>
+                </div>
               </div>
+              <div class="wf-actor-tag" :style="{ color: actor.color }">{{ actor.tag }}</div>
             </div>
-            <div class="wf-menus">
-              <div v-for="m in execActor.menus" :key="m.title" class="wf-menu">
-                <div class="wf-menu-title">{{ m.title }}</div>
-                <ul class="wf-menu-list">
-                  <li v-for="it in m.items" :key="it">{{ it }}</li>
-                </ul>
+
+            <!-- 커넥터 (마지막 아니면) -->
+            <div v-if="idx < actors.length - 1" class="wf-conn">
+              <span class="wf-conn-lbl wf-conn-fwd">
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="5 12 19 12"/><polyline points="13 6 19 12 13 18"/></svg>
+                {{ connectors[idx].fwd }}
+              </span>
+              <div class="wf-conn-line">
+                <div class="wf-conn-track"></div>
+                <div class="wf-conn-arrow"></div>
               </div>
+              <span class="wf-conn-lbl wf-conn-back">
+                {{ connectors[idx].back }}
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="19 12 5 12"/><polyline points="11 6 5 12 11 18"/></svg>
+              </span>
             </div>
-          </div>
+
+          </template>
         </div>
 
-        <!-- [col5 / row2] 수직 화살표 -->
-        <div class="wf-cell-vc">
-          <div class="wf-vc">
-            <span class="wf-vc-lbl wf-vc-up">
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-              정기 보고
-            </span>
-            <div class="wf-vc-line"></div>
-            <span class="wf-vc-lbl wf-vc-dn">
-              전략 방향
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-            </span>
-          </div>
-        </div>
-
-        <!-- [col1 / row3] AI 운영부서 -->
-        <div class="wf-cell-a1">
-          <div class="wf-actor" :style="{ borderTopColor: mainActors[0].color }">
-            <div class="wf-actor-hd">
-              <div class="wf-icon" :style="{ background: mainActors[0].color }">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-              </div>
-              <div>
-                <div class="wf-actor-name">{{ mainActors[0].name }}</div>
-                <div class="wf-actor-role">{{ mainActors[0].role }}</div>
-              </div>
-            </div>
-            <div class="wf-menus">
-              <div v-for="m in mainActors[0].menus" :key="m.title" class="wf-menu">
-                <div class="wf-menu-title">{{ m.title }}</div>
-                <ul class="wf-menu-list"><li v-for="it in m.items" :key="it">{{ it }}</li></ul>
-              </div>
-            </div>
-            <div class="wf-actor-tag" :style="{ color: mainActors[0].color }">{{ mainActors[0].tag }}</div>
-          </div>
-        </div>
-
-        <!-- [col2 / row3] 커넥터 1 -->
-        <div class="wf-cell-c1">
-          <div class="wf-hconn">
-            <span class="wf-hc-lbl wf-hc-fwd">
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="5 12 19 12"/><polyline points="13 6 19 12 13 18"/></svg>
-              {{ connectors[0].fwd }}
-            </span>
-            <div class="wf-hc-line"><div class="wf-hc-track"></div><div class="wf-hc-arrowhead"></div></div>
-            <span class="wf-hc-lbl wf-hc-back">
-              {{ connectors[0].back }}
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="19 12 5 12"/><polyline points="11 6 5 12 11 18"/></svg>
-            </span>
-          </div>
-        </div>
-
-        <!-- [col3 / row3] 법무팀 -->
-        <div class="wf-cell-a2">
-          <div class="wf-actor" :style="{ borderTopColor: mainActors[1].color }">
-            <div class="wf-actor-hd">
-              <div class="wf-icon" :style="{ background: mainActors[1].color }">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-              </div>
-              <div>
-                <div class="wf-actor-name">{{ mainActors[1].name }}</div>
-                <div class="wf-actor-role">{{ mainActors[1].role }}</div>
-              </div>
-            </div>
-            <div class="wf-menus">
-              <div v-for="m in mainActors[1].menus" :key="m.title" class="wf-menu">
-                <div class="wf-menu-title">{{ m.title }}</div>
-                <ul class="wf-menu-list"><li v-for="it in m.items" :key="it">{{ it }}</li></ul>
-              </div>
-            </div>
-            <div class="wf-actor-tag" :style="{ color: mainActors[1].color }">{{ mainActors[1].tag }}</div>
-          </div>
-        </div>
-
-        <!-- [col4 / row3] 커넥터 2 -->
-        <div class="wf-cell-c2">
-          <div class="wf-hconn">
-            <span class="wf-hc-lbl wf-hc-fwd">
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="5 12 19 12"/><polyline points="13 6 19 12 13 18"/></svg>
-              {{ connectors[1].fwd }}
-            </span>
-            <div class="wf-hc-line"><div class="wf-hc-track"></div><div class="wf-hc-arrowhead"></div></div>
-            <span class="wf-hc-lbl wf-hc-back">
-              {{ connectors[1].back }}
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="19 12 5 12"/><polyline points="11 6 5 12 11 18"/></svg>
-            </span>
-          </div>
-        </div>
-
-        <!-- [col5 / row3] AX 기획팀 -->
-        <div class="wf-cell-a3">
-          <div class="wf-actor wf-actor-ours" :style="{ borderTopColor: mainActors[2].color }">
-            <div class="wf-ours-badge">우리 팀</div>
-            <div class="wf-actor-hd">
-              <div class="wf-icon" :style="{ background: mainActors[2].color }">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              </div>
-              <div>
-                <div class="wf-actor-name">{{ mainActors[2].name }}</div>
-                <div class="wf-actor-role">{{ mainActors[2].role }}</div>
-              </div>
-            </div>
-            <div class="wf-menus">
-              <div v-for="m in mainActors[2].menus" :key="m.title" class="wf-menu">
-                <div class="wf-menu-title">{{ m.title }}</div>
-                <ul class="wf-menu-list"><li v-for="it in m.items" :key="it">{{ it }}</li></ul>
-              </div>
-            </div>
-            <div class="wf-actor-tag" :style="{ color: mainActors[2].color }">{{ mainActors[2].tag }}</div>
-          </div>
-        </div>
-
-        <!-- [col1-5 / row4] 피드백 화살표 -->
-        <div class="wf-cell-fb">
-          <div class="wf-feedback">
-            <div class="wf-fb-arrow wf-fb-arrow-l"></div>
-            <div class="wf-fb-label">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
-              이슈 조치 요청 · 운영 가이드라인 전달 · 모니터링 피드백
-            </div>
+        <!-- 피드백 화살표 -->
+        <div class="wf-feedback">
+          <div class="wf-fb-arrowhead"></div>
+          <div class="wf-fb-label">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+            이슈 조치 요청 · 운영 가이드라인 전달 · 모니터링 피드백 (AX 기획팀 → AI 운영부서)
           </div>
         </div>
 
@@ -280,7 +195,7 @@ const phases = [
 <style scoped>
 .wf-page { display: flex; flex-direction: column; gap: 24px; padding-bottom: 40px; }
 
-/* ── Hero ── */
+/* Hero */
 .wf-hero { background: linear-gradient(135deg, #0D2137 0%, #1A3A5C 60%, #0D47A1 100%); border-radius: 12px; padding: 28px 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 .wf-eyebrow { font-size: 10px; font-weight: 700; color: #90CAF9; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
 .wf-title { font-size: 24px; font-weight: 800; color: white; margin: 0 0 6px; }
@@ -290,65 +205,47 @@ const phases = [
 .wf-stat-n { font-size: 28px; font-weight: 800; color: white; line-height: 1; }
 .wf-stat-l { font-size: 10px; color: #78909C; white-space: nowrap; }
 
-/* ── Card ── */
+/* Card */
 .wf-card { background: white; border: 1px solid var(--gray-200); border-radius: 12px; padding: 24px; }
 
-/* ── Diagram grid ── */
-.wf-grid {
-  display: grid;
-  grid-template-columns: 1fr 68px 1fr 68px 1fr;
-  grid-template-rows: auto auto auto auto;
-}
+/* Diagram */
+.wf-diagram { display: flex; flex-direction: column; gap: 0; }
 
-.wf-cell-exec { grid-column: 5; grid-row: 1; }
-.wf-cell-vc   { grid-column: 5; grid-row: 2; display: flex; justify-content: center; align-items: center; padding: 4px 0; }
-.wf-cell-a1   { grid-column: 1; grid-row: 3; }
-.wf-cell-c1   { grid-column: 2; grid-row: 3; display: flex; align-items: center; }
-.wf-cell-a2   { grid-column: 3; grid-row: 3; }
-.wf-cell-c2   { grid-column: 4; grid-row: 3; display: flex; align-items: center; }
-.wf-cell-a3   { grid-column: 5; grid-row: 3; }
-.wf-cell-fb   { grid-column: 1 / -1; grid-row: 4; margin-top: 10px; }
+/* 한 줄 행 */
+.wf-row { display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr 60px 1fr; align-items: stretch; gap: 0; }
 
-/* ── Vertical connector ── */
-.wf-vc { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 72px; }
-.wf-vc-line { width: 2px; background: #BFDBFE; min-height: 28px; flex: 1; position: relative; }
-.wf-vc-line::before { content: ''; position: absolute; top: -5px; left: -4px; border: 5px solid transparent; border-bottom-color: #93C5FD; }
-.wf-vc-line::after  { content: ''; position: absolute; bottom: -5px; left: -4px; border: 5px solid transparent; border-top-color: #93C5FD; }
-.wf-vc-lbl { display: flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; color: #2563EB; white-space: nowrap; }
-
-/* ── Actor box ── */
-.wf-actor { height: 100%; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; position: relative; border: 1.5px solid var(--gray-200); border-top-width: 3px; background: var(--gray-50); box-sizing: border-box; }
+/* Actor */
+.wf-actor { border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px; position: relative; border: 1.5px solid var(--gray-200); border-top-width: 3px; background: var(--gray-50); box-sizing: border-box; }
 .wf-actor-ours { border-color: #2563EB; background: #EFF6FF; box-shadow: 0 0 0 3px #DBEAFE; }
 .wf-ours-badge { position: absolute; top: -11px; left: 50%; transform: translateX(-50%); background: #0D47A1; color: white; font-size: 10px; font-weight: 700; padding: 2px 10px; border-radius: 10px; white-space: nowrap; }
-.wf-actor-hd { display: flex; align-items: flex-start; gap: 10px; }
-.wf-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
+.wf-actor-hd { display: flex; align-items: flex-start; gap: 8px; }
+.wf-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; }
 .wf-actor-name { font-size: 13px; font-weight: 800; color: var(--gray-900); line-height: 1.2; }
 .wf-actor-role { font-size: 10px; font-weight: 600; color: var(--gray-500); margin-top: 2px; }
 .wf-actor-tag { font-size: 10px; font-weight: 700; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--gray-200); }
 
-/* ── Menus inside actor ── */
+/* Menus */
 .wf-menus { display: flex; flex-direction: column; gap: 6px; }
 .wf-menu { background: white; border: 1px solid var(--gray-200); border-radius: 6px; padding: 7px 9px; }
 .wf-menu-title { font-size: 10px; font-weight: 700; color: var(--gray-700); margin-bottom: 4px; }
 .wf-menu-list { margin: 0; padding-left: 13px; display: flex; flex-direction: column; gap: 2px; }
 .wf-menu-list li { font-size: 10px; color: var(--gray-500); line-height: 1.4; }
 
-/* ── Horizontal connector ── */
-.wf-hconn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; width: 100%; padding: 0 4px; }
-.wf-hc-lbl { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; white-space: nowrap; }
-.wf-hc-fwd { color: #1E40AF; }
-.wf-hc-back { color: var(--gray-400); }
-.wf-hc-line { display: flex; align-items: center; width: 100%; }
-.wf-hc-track { flex: 1; height: 2px; background: #BFDBFE; }
-.wf-hc-arrowhead { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid #93C5FD; }
+/* Connector */
+.wf-conn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 0 2px; }
+.wf-conn-lbl { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; white-space: nowrap; }
+.wf-conn-fwd { color: #1E40AF; }
+.wf-conn-back { color: var(--gray-400); }
+.wf-conn-line { display: flex; align-items: center; width: 100%; }
+.wf-conn-track { flex: 1; height: 2px; background: #BFDBFE; }
+.wf-conn-arrow { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 7px solid #93C5FD; }
 
-/* ── Feedback arrow ── */
-.wf-feedback { display: flex; align-items: center; gap: 8px; border: 2px dashed #FCA5A5; border-top: none; border-radius: 0 0 10px 10px; padding: 10px 16px; background: #FFF5F5; }
-.wf-fb-arrow { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; flex-shrink: 0; }
-.wf-fb-arrow-l { border-right: 7px solid #EF4444; }
+/* Feedback arrow */
+.wf-feedback { display: flex; align-items: center; gap: 8px; border: 2px dashed #FCA5A5; border-top: none; border-radius: 0 0 10px 10px; padding: 10px 16px; background: #FFF5F5; margin-top: 0; }
+.wf-fb-arrowhead { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-right: 7px solid #EF4444; flex-shrink: 0; }
 .wf-fb-label { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #B91C1C; flex: 1; justify-content: center; }
 
-/* ── Phases ── */
+/* Phases */
 .wf-phases-title { font-size: 15px; font-weight: 700; color: var(--gray-800); margin: 0 0 18px; }
 .wf-phases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .wf-phase { border-radius: 10px; padding: 18px; border: 1px solid var(--gray-200); border-top-width: 3px; }

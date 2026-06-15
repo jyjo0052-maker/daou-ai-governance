@@ -155,14 +155,6 @@ const phases = [
           </template>
         </div>
 
-        <!-- 피드백 화살표 -->
-        <div class="wf-feedback">
-          <div class="wf-fb-arrowhead"></div>
-          <div class="wf-fb-label">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
-            이슈 조치 요청 · 운영 가이드라인 전달 · 모니터링 피드백 (AX 기획팀 → AI 운영부서)
-          </div>
-        </div>
 
       </div>
     </section>

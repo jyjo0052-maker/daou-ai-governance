@@ -12,7 +12,7 @@
     <section class="wf-card">
       <div class="wf-diagram">
 
-        <!-- Row 1: nodes + connectors -->
+        <!-- Row 1: nodes + connectors (7 cells) -->
 
         <div class="wf-node" style="border-top-color:#1B6B3A">
           <div class="wf-node-icon" style="background:#1B6B3A">
@@ -68,12 +68,27 @@
           <div class="wf-node-desc">현황 파악 및<br>전략 방향 의사결정</div>
         </div>
 
-        <!-- Row 2: 승인/반려 복귀 arrow — starts from AX기획팀 (col 5 right), bends left to AI 운영부서 (col 1) -->
+        <!--
+          Row 2: 승인/반려 복귀 화살표
+          AX기획팀 bottom-center → 아래로 꺾여 → AI 운영부서 bottom-center ↑
+          Subgrid: 5 children fill cols 1–5 with exact same widths as row 1
+        -->
         <div class="wf-return">
-          <span class="wf-ret-lbl">승인 / 반려 통보</span>
+          <!-- col 1: AI 운영부서 — right half has upward arrowhead + border going right -->
+          <div class="ret-c1">
+            <div class="ret-c1-inner"></div>
+          </div>
+          <!-- cols 2–4: horizontal line with label -->
+          <div class="ret-mid">
+            <span class="ret-lbl">승인 / 반려 통보</span>
+          </div>
+          <!-- col 5: AX 기획팀 — left half has vertical drop + border going left -->
+          <div class="ret-c5">
+            <div class="ret-c5-inner"></div>
+          </div>
         </div>
 
-        <!-- col 6–7 placeholder -->
+        <!-- cols 6–7 row 2: empty -->
         <div></div>
         <div></div>
 
@@ -91,17 +106,18 @@
   border-radius: 12px; padding: 28px 32px;
 }
 .wf-eyebrow { font-size: 10px; font-weight: 700; color: #90CAF9; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
-.wf-title { font-size: 24px; font-weight: 800; color: white; margin: 0 0 6px; }
-.wf-sub { font-size: 12px; color: #78909C; margin: 0; }
+.wf-title   { font-size: 24px; font-weight: 800; color: white; margin: 0 0 6px; }
+.wf-sub     { font-size: 12px; color: #78909C; margin: 0; }
 
 .wf-card { background: white; border: 1px solid var(--gray-200); border-radius: 12px; padding: 36px 28px 40px; }
 
-/* Unified 7-column grid */
+/* 7-column grid, 2 rows */
 .wf-diagram {
   display: grid;
   grid-template-columns: 1fr 80px 1fr 80px 1fr 96px 1fr;
   grid-template-rows: auto auto;
   align-items: center;
+  overflow: visible;
 }
 .wf-node, .wf-conn { align-self: center; }
 
@@ -117,56 +133,79 @@
 .wf-node-name { font-size: 14px; font-weight: 800; color: var(--gray-900); }
 .wf-node-desc { font-size: 11px; color: var(--gray-500); line-height: 1.6; }
 
-/* Connector */
+/* Connectors */
 .wf-conn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0 4px; }
 .wf-conn-lbl { display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; white-space: nowrap; }
-.wf-fwd { color: #1E40AF; }
+.wf-fwd  { color: #1E40AF; }
 .wf-back { color: var(--gray-500); }
 .wf-line { display: flex; align-items: center; width: 100%; }
 .wf-track { flex: 1; height: 2px; background: #BFDBFE; }
-.wf-head { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid #93C5FD; }
+.wf-head  { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid #93C5FD; }
 
-/*
-  Return arrow: AX기획팀 → (down) → (left) → AI 운영부서
-  grid-column 1/6 spans AI 운영부서 through AX기획팀.
-  border-right = vertical drop from AX기획팀 bottom
-  border-bottom = horizontal segment going left
-  ::before = arrowhead (←) at the AI 운영부서 end
+/* ── Return arc (row 2, col 1–5) ──
+   Uses CSS subgrid so each child inherits exact column widths from the parent grid.
+   Visual path: AX기획팀 center-bottom → down → left → AI 운영부서 center-bottom ↑
 */
 .wf-return {
   grid-column: 1 / 6;
+  display: grid;
+  grid-template-columns: subgrid;
+  height: 44px;
+  overflow: visible;
+  margin-top: 4px;
+}
+
+/* col 1 (AI 운영부서): right half = vertical line + upward arrowhead */
+.ret-c1 {
+  grid-column: 1;
+  display: flex;
+  justify-content: flex-end; /* push inner to right half */
+  align-items: stretch;
+  overflow: visible;
+}
+.ret-c1-inner {
+  width: 50%;
+  border-left: 2px solid #BFDBFE;
+  border-bottom: 2px solid #BFDBFE;
   position: relative;
   overflow: visible;
-  height: 40px;
-  border-right: 2px solid #2563EB;
-  border-bottom: 2px solid #2563EB;
-  border-radius: 0 0 10px 0;
-  margin-top: 2px;
 }
-
-/* Arrowhead ← at the left end of the return line (AI 운영부서 side) */
-.wf-return::before {
+/* Upward arrowhead ↑ at the top of the vertical line (AI 운영부서 bottom center) */
+.ret-c1-inner::before {
   content: '';
   position: absolute;
-  left: -8px;
-  bottom: -7px;
+  top: -8px;
+  left: -6px;
   width: 0; height: 0;
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
-  border-right: 10px solid #2563EB;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 9px solid #93C5FD;
 }
 
-/* Label on the horizontal segment */
-.wf-ret-lbl {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  font-weight: 700;
-  color: #1D4ED8;
-  white-space: nowrap;
-  background: white;
-  padding: 0 8px;
+/* cols 2–4 (connector + 법무팀 + connector): horizontal line */
+.ret-mid {
+  grid-column: 2 / 5;
+  border-bottom: 2px solid #BFDBFE;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 7px;
+}
+.ret-lbl {
+  font-size: 9px; font-weight: 600; color: #1E40AF; white-space: nowrap;
+}
+
+/* col 5 (AX 기획팀): left half = vertical drop + corner going left */
+.ret-c5 {
+  grid-column: 5;
+  display: flex;
+  justify-content: flex-start; /* push inner to left half */
+  align-items: stretch;
+}
+.ret-c5-inner {
+  width: 50%;
+  border-right: 2px solid #BFDBFE;
+  border-bottom: 2px solid #BFDBFE;
+  border-radius: 0 0 8px 0;
 }
 </style>

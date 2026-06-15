@@ -36,10 +36,18 @@ function deleteReg(id) { localRegs.value = localRegs.value.filter(r => r.id !== 
 // 등록 요청 검토 모달
 const showRegModal = ref(false)
 const selectedReg = ref(null)
-function openRegModal(r) { selectedReg.value = r; showRegModal.value = true }
-function closeRegModal() { showRegModal.value = false; selectedReg.value = null }
+const showRejectForm = ref(false)
+const rejectComment = ref('')
+function openRegModal(r) { selectedReg.value = r; showRegModal.value = true; showRejectForm.value = false; rejectComment.value = '' }
+function closeRegModal() { showRegModal.value = false; selectedReg.value = null; showRejectForm.value = false; rejectComment.value = '' }
+function openRejectForm() { showRejectForm.value = true }
+function cancelReject() { showRejectForm.value = false; rejectComment.value = '' }
 function approveReg() { alert(`[${selectedReg.value.id}] ${selectedReg.value.feature} 등록 요청을 승인했습니다.`); closeRegModal() }
-function rejectReg() { alert(`[${selectedReg.value.id}] ${selectedReg.value.feature} 등록 요청을 반려했습니다.`); closeRegModal() }
+function rejectReg() {
+  if (!rejectComment.value.trim()) { alert('반려 사유를 입력해 주세요.'); return }
+  alert(`[${selectedReg.value.id}] ${selectedReg.value.feature} 등록 요청을 반려했습니다.\n\n반려 사유: ${rejectComment.value.trim()}`)
+  closeRegModal()
+}
 
 function getRiskClass(l) { return { '고영향 AI': 'risk-high', '생성형 AI': 'risk-generative', '일반 AI': 'risk-minimal' }[l] || '' }
 function needsAction(s) {
@@ -364,10 +372,28 @@ function getRegStatusClass(s) {
           </div>
         </div>
 
+        <!-- 반려 사유 입력 폼 -->
+        <div v-if="showRejectForm" class="reject-form">
+          <div class="reject-form-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            반려 사유 <span class="reject-required">*</span>
+          </div>
+          <textarea
+            v-model="rejectComment"
+            class="reject-textarea"
+            placeholder="운영부서에 전달할 반려 사유를 입력하세요. (보완 요청 사항, 추가 검토 필요 항목 등)"
+            rows="4"
+          ></textarea>
+          <div class="reject-form-actions">
+            <button class="btn-secondary" @click="cancelReject">취소</button>
+            <button class="btn-danger-sm" @click="rejectReg">반려 확정</button>
+          </div>
+        </div>
+
         <div class="modal-footer">
           <button class="btn-secondary" @click="closeRegModal">닫기</button>
-          <template v-if="selectedReg.status === '검토 중'">
-            <button class="btn-danger-sm" @click="rejectReg">반려</button>
+          <template v-if="selectedReg.status === '검토 중' && !showRejectForm">
+            <button class="btn-danger-sm" @click="openRejectForm">반려</button>
             <button class="btn-primary-sm" @click="approveReg">승인</button>
           </template>
         </div>

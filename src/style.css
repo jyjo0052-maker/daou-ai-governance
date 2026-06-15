@@ -388,6 +388,15 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: var(--g
 .btn-danger-sm { padding: 8px 16px; border-radius: var(--radius-xs); font-size: 13px; font-weight: 600; cursor: pointer; border: none; background: var(--danger-light); color: var(--danger); transition: all 0.15s; }
 .btn-danger-sm:hover { background: var(--danger); color: white; }
 
+/* ── Reject form ── */
+.reject-form { border-top: 1px solid #FEE2E2; background: #FFF5F5; padding: 16px 26px; }
+.reject-form-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #B91C1C; margin-bottom: 10px; }
+.reject-required { color: #EF4444; }
+.reject-textarea { width: 100%; box-sizing: border-box; border: 1.5px solid #FECACA; border-radius: 8px; padding: 10px 12px; font-size: 13px; font-family: inherit; color: var(--gray-800); resize: vertical; line-height: 1.6; outline: none; background: white; }
+.reject-textarea:focus { border-color: #F87171; box-shadow: 0 0 0 3px #FEE2E2; }
+.reject-textarea::placeholder { color: #9CA3AF; }
+.reject-form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
 /* ── Compliance Issue Status ── */
 .issue-status-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; }
 .issue-status-done { background: var(--success-light); color: #2E7D32; }

@@ -8,6 +8,7 @@ import { aiServices, complianceItems } from './data/services.js'
 
 const activeNav = ref('dashboard')
 const inventoryTab = ref('목록')
+const inventoryOpenRegId = ref(null)
 const showModal = ref(false)
 const selectedService = ref(null)
 
@@ -79,8 +80,8 @@ const qualityChartData = computed(() => {
 
     <main class="main">
       <WorkflowView v-if="activeNav === 'workflow'" />
-      <DashboardView v-else-if="activeNav === 'dashboard'" :on-open-detail="openDetail" :on-navigate="(nav, tab) => { activeNav = nav; if (tab) inventoryTab = tab }" />
-      <InventoryView v-else-if="activeNav === 'inventory'" :on-open-detail="openDetail" :initial-tab="inventoryTab" />
+      <DashboardView v-else-if="activeNav === 'dashboard'" :on-open-detail="openDetail" :on-navigate="(nav, tab, regId) => { activeNav = nav; if (tab) inventoryTab = tab; inventoryOpenRegId = regId ?? null }" />
+      <InventoryView v-else-if="activeNav === 'inventory'" :on-open-detail="openDetail" :initial-tab="inventoryTab" :initial-reg-id="inventoryOpenRegId" />
       <ComplianceView v-else-if="activeNav === 'compliance'" />
 
     </main>

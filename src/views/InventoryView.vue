@@ -1,10 +1,21 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { aiServices, registrationRequests } from '../data/services.js'
 
-const props = defineProps({ onOpenDetail: Function, initialTab: { type: String, default: '목록' } })
+const props = defineProps({
+  onOpenDetail: Function,
+  initialTab: { type: String, default: '목록' },
+  initialRegId: { type: String, default: null }
+})
 
 const activeTab = ref(props.initialTab)
+
+onMounted(() => {
+  if (props.initialRegId) {
+    const reg = localRegs.value.find(r => r.id === props.initialRegId)
+    if (reg) openRegModal(reg)
+  }
+})
 
 // 서비스 목록 필터
 const selectedProduct = ref('전체')

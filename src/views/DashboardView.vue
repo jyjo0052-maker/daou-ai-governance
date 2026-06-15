@@ -209,7 +209,7 @@ function getAlertReasons(s) {
               <tr><th>요청일</th><th>제품</th><th>AI 기능명</th><th>등급</th><th>상태</th></tr>
             </thead>
             <tbody>
-              <tr v-for="r in pendingRegistrations" :key="r.id" class="table-row" @click="onNavigate('inventory', '등록 요청')">
+              <tr v-for="r in pendingRegistrations" :key="r.id" class="table-row" @click="onNavigate('inventory', '등록 요청', r.id)">
                 <td class="date-cell">{{ r.requestDate }}</td>
                 <td><span class="product-tag-sm" :class="'product-' + r.product">{{ r.product }}</span></td>
                 <td><span class="feature-name">{{ r.feature }}</span></td>

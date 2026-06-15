@@ -48,7 +48,7 @@ const actors = [
 
 const connectors = [
   { fwd: '등록 신청', back: '승인 / 반려' },
-  { fwd: '검토 의견서', back: '검토 요청' },
+  { fwd: '검토 요청', back: '검토 의견서' },
   { fwd: '정기 보고', back: '전략 방향' },
 ]
 

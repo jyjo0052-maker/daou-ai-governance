@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import WorkflowView from './views/WorkflowView.vue'
 import DashboardView from './views/DashboardView.vue'
 import InventoryView from './views/InventoryView.vue'
 import ComplianceView from './views/ComplianceView.vue'
@@ -52,6 +53,9 @@ const qualityChartData = computed(() => {
           <span class="logo-badge">DAOU</span>
         </div>
         <nav class="header-nav">
+          <a :class="['nav-item', { active: activeNav === 'workflow' }]" @click="activeNav = 'workflow'">
+            서비스 워크플로우
+          </a>
           <a :class="['nav-item', { active: activeNav === 'dashboard' }]" @click="activeNav = 'dashboard'">
             대시보드
           </a>
@@ -73,9 +77,11 @@ const qualityChartData = computed(() => {
     </header>
 
     <main class="main">
-      <DashboardView v-if="activeNav === 'dashboard'" :on-open-detail="openDetail" :on-navigate="nav => activeNav = nav" />
+      <WorkflowView v-if="activeNav === 'workflow'" />
+      <DashboardView v-else-if="activeNav === 'dashboard'" :on-open-detail="openDetail" :on-navigate="nav => activeNav = nav" />
       <InventoryView v-else-if="activeNav === 'inventory'" :on-open-detail="openDetail" />
       <ComplianceView v-else-if="activeNav === 'compliance'" />
+
     </main>
 
     <!-- Detail Modal -->

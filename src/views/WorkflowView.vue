@@ -36,7 +36,7 @@
         </div>
 
         <div class="wf-conn">
-          <div class="wf-conn-lbl wf-fwd">검토 의견서 전달</div>
+          <div class="wf-conn-lbl wf-fwd">검토 요청</div>
           <div class="wf-line"><div class="wf-track"></div><div class="wf-head"></div></div>
         </div>
 
@@ -49,15 +49,10 @@
         </div>
 
         <div class="wf-conn wf-conn-bi">
-          <div class="wf-conn-lbl wf-fwd">
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>
-            정기 보고
-          </div>
+          <div class="wf-conn-lbl wf-fwd">정기 보고</div>
           <div class="wf-line"><div class="wf-track"></div><div class="wf-head"></div></div>
-          <div class="wf-conn-lbl wf-back">
-            전략 방향
-            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 6 5 12 11 18"/></svg>
-          </div>
+          <div class="wf-conn-lbl wf-back">전략 방향</div>
+          <div class="wf-line"><div class="wf-head-back"></div><div class="wf-track"></div></div>
         </div>
 
         <div class="wf-node" style="border-top-color:#263238">
@@ -140,7 +135,8 @@
 .wf-back { color: var(--gray-500); }
 .wf-line { display: flex; align-items: center; width: 100%; }
 .wf-track { flex: 1; height: 2px; background: #BFDBFE; }
-.wf-head  { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid #93C5FD; }
+.wf-head      { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid #93C5FD; }
+.wf-head-back { width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-right: 8px solid #93C5FD; }
 
 /* ── Return arc (row 2, col 1–5) ──
    Uses CSS subgrid so each child inherits exact column widths from the parent grid.

@@ -1,25 +1,13 @@
 <script setup>
 import { computed } from 'vue'
-import { aiServices, complianceItems, recentChanges } from '../data/services.js'
+import { aiServices, complianceItems, registrationRequests } from '../data/services.js'
 
 const props = defineProps({ onOpenDetail: Function, onNavigate: Function })
 
 const QUALITY_THRESHOLD = 85
 
-// ── 전체 지표 ──
 const totalServices = computed(() => aiServices.length)
 const products = computed(() => [...new Set(aiServices.map(s => s.product))])
-
-const overallComplianceRate = computed(() => {
-  let pass = 0, total = 0
-  aiServices.forEach(s => complianceItems.forEach(item => {
-    if (item.key !== 'generativeAILabel' || s.riskLevel === '생성형 AI' || s.riskLevel === '고영향 AI') {
-      total++
-      if (s.compliance[item.key]) pass++
-    }
-  }))
-  return total ? Math.round(pass / total * 100) : 100
-})
 
 const complianceViolationCount = computed(() =>
   aiServices.filter(s => Object.values(s.compliance).some(v => !v)).length
@@ -28,9 +16,11 @@ const alertServices = computed(() =>
   aiServices.filter(s => s.status === '주의' || s.status === '점검필요' || Object.values(s.compliance).some(v => !v))
 )
 const belowThreshold = computed(() => aiServices.filter(s => s.qualityScore < QUALITY_THRESHOLD).length)
-function findService(c) { return aiServices.find(s => s.id === c.serviceId) }
 
-// ── 등급별 현황 ──
+const pendingRegistrations = computed(() =>
+  registrationRequests.filter(r => r.status === '검토 중')
+)
+
 const riskGroups = computed(() => {
   const levels = ['고영향 AI', '생성형 AI', '일반 AI']
   return levels.map(level => {
@@ -45,23 +35,41 @@ const riskGroups = computed(() => {
   })
 })
 
-// ── 제품별 거버넌스 현황 ──
-const productStats = computed(() =>
-  products.value.map(p => {
-    const services = aiServices.filter(s => s.product === p)
-    const alertCount = services.filter(s => s.status === '주의' || s.status === '점검필요' || Object.values(s.compliance).some(v => !v)).length
-    const pendingCRs = recentChanges.filter(c => c.product === p && c.status === '진행 중').length
-    const compliant = services.filter(s => complianceItems.every(item => {
-      if (item.key === 'generativeAILabel' && s.riskLevel === '일반 AI') return true
-      return s.compliance[item.key]
-    })).length
-    const rate = Math.round(compliant / services.length * 100)
-    return { product: p, count: services.length, rate, alertCount, pendingCRs }
+const complianceItemStats = computed(() => {
+  const stats = {}
+  complianceItems.forEach(item => {
+    const applicable = item.key === 'generativeAILabel'
+      ? aiServices.filter(s => s.riskLevel === '생성형 AI' || s.riskLevel === '고영향 AI')
+      : aiServices
+    const pass = applicable.filter(s => s.compliance[item.key]).length
+    stats[item.key] = {
+      pass, total: applicable.length,
+      rate: applicable.length ? Math.round(pass / applicable.length * 100) : 100,
+    }
   })
-)
+  return stats
+})
+
+const DONUT_R = 70
+const DONUT_COLORS = { '고영향 AI': '#F44336', '생성형 AI': '#2BABEE', '일반 AI': '#4CAF50' }
+const donutSegments = computed(() => {
+  const total = aiServices.length
+  const C = 2 * Math.PI * DONUT_R
+  let accumulated = 0
+  return riskGroups.value.map(g => {
+    const dash = (g.count / total) * C
+    const seg = {
+      level: g.level, count: g.count, rate: g.rate,
+      color: DONUT_COLORS[g.level],
+      dashArray: `${dash} ${C - dash}`,
+      dashOffset: C * 0.25 - accumulated,
+    }
+    accumulated += dash
+    return seg
+  })
+})
 
 function getRiskClass(l) { return { '고영향 AI': 'risk-high', '생성형 AI': 'risk-generative', '일반 AI': 'risk-minimal' }[l] || '' }
-function getChangeStatusClass(s) { return { '승인': 'badge-success', '완료': 'badge-info', '진행 중': 'badge-warning' }[s] || 'badge-default' }
 function getAlertReasons(s) {
   const r = []
   if (s.status === '주의' || s.status === '점검필요') r.push('품질 ' + s.status)
@@ -69,22 +77,21 @@ function getAlertReasons(s) {
   if (v > 0) r.push(`규제 미준수 ${v}건`)
   return r
 }
-function getCRStatusClass(s) { return { '진행 중': 'badge-warning', '검토 중': 'badge-default', '승인': 'badge-success' }[s] || 'badge-default' }
 </script>
 
 <template>
   <div>
-    <!-- 헤더 -->
     <div class="view-header">
       <div>
         <h2 class="view-title">AI 거버넌스 현황</h2>
-        <p class="view-desc">다우기술 전사 AI 서비스의 규제 준수·품질·변경 요청 현황을 통합 관리합니다.</p>
+        <p class="view-desc">다우기술 전사 AI 서비스의 규제 준수·품질·등록 요청 현황을 통합 관리합니다.</p>
       </div>
-      <span class="dashboard-date">기준일: 2026-06-14</span>
+      <span class="dashboard-date">기준일: 2026-06-15</span>
     </div>
 
     <!-- KPI 4개 -->
     <section class="kpi-section">
+
       <div class="kpi-card kpi-clickable" @click="onNavigate('inventory')">
         <div class="kpi-header">
           <span class="kpi-label">운영 중 AI 서비스</span>
@@ -113,7 +120,7 @@ function getCRStatusClass(s) { return { '진행 중': 'badge-warning', '검토 �
         </div>
       </div>
 
-      <div class="kpi-card kpi-clickable" :class="alertServices.length > 0 ? 'kpi-alert' : 'kpi-good'" @click="onNavigate('operations')">
+      <div class="kpi-card kpi-clickable" :class="alertServices.length > 0 ? 'kpi-alert' : 'kpi-good'" @click="onNavigate('inventory')">
         <div class="kpi-header">
           <span class="kpi-label">즉시 조치 필요</span>
           <div class="kpi-icon" :class="alertServices.length > 0 ? 'kpi-icon-orange' : 'kpi-icon-green'">
@@ -130,83 +137,22 @@ function getCRStatusClass(s) { return { '진행 중': 'badge-warning', '검토 �
         </div>
       </div>
 
-      <div class="kpi-card">
+      <div class="kpi-card kpi-clickable" :class="pendingRegistrations.length > 0 ? 'kpi-warn' : ''" @click="onNavigate('inventory')">
         <div class="kpi-header">
-          <span class="kpi-label">이번달 변경 이력</span>
-          <div class="kpi-icon kpi-icon-blue">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span class="kpi-label">신규 등록 요청</span>
+          <div class="kpi-icon" :class="pendingRegistrations.length > 0 ? 'kpi-icon-orange' : 'kpi-icon-blue'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
           </div>
         </div>
-        <div class="kpi-value">{{ recentChanges.length }}<span class="kpi-unit">건</span></div>
-        <div class="kpi-sub">전사 AI 서비스 변경 발생</div>
+        <div class="kpi-value">{{ pendingRegistrations.length }}<span class="kpi-unit">건</span></div>
+        <div class="kpi-sub">운영부서 신규 AI 등록 요청</div>
       </div>
+
     </section>
 
-    <!-- 등급별 현황 + 제품별 거버넌스 -->
+    <!-- 즉시 조치 필요 + 신규 AI 등록 요청 -->
     <div class="dashboard-bottom-grid" style="margin-bottom:24px">
 
-      <!-- 등급별 AI 서비스 현황 -->
-      <section class="table-section">
-        <h3 class="section-title" style="margin-bottom:16px">등급별 현황</h3>
-        <div class="risk-group-list">
-          <div v-for="g in riskGroups" :key="g.level" class="risk-group-item">
-            <div class="risk-group-left">
-              <span class="risk-badge" :class="getRiskClass(g.level)">{{ g.level }}</span>
-              <span class="risk-group-count">{{ g.count }}개 서비스</span>
-            </div>
-            <div class="risk-group-right">
-              <div class="risk-group-bar-wrap">
-                <div class="risk-group-bar">
-                  <div class="risk-group-bar-fill" :class="g.rate === 100 ? 'fill-green' : 'fill-red'" :style="{ width: g.rate + '%' }"></div>
-                </div>
-                <span class="risk-group-rate" :class="g.rate === 100 ? 'score-high' : 'score-low'">규제 준수 {{ g.rate }}%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 제품별 거버넌스 현황 -->
-      <section class="table-section">
-        <h3 class="section-title" style="margin-bottom:16px">제품팀별 거버넌스 현황</h3>
-        <div class="table-wrap">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>제품</th>
-                <th>AI 수</th>
-                <th>규제 준수율</th>
-                <th>조치 필요</th>
-                <th>미해결 요청</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="p in productStats" :key="p.product" class="table-row" @click="onNavigate('inventory')">
-                <td><span class="product-tag" :class="'product-' + p.product">{{ p.product }}</span></td>
-                <td class="date-cell">{{ p.count }}개</td>
-                <td>
-                  <span class="score-value" :class="p.rate === 100 ? 'score-high' : 'score-low'">{{ p.rate }}%</span>
-                </td>
-                <td>
-                  <span v-if="p.alertCount > 0" class="reason-tag">{{ p.alertCount }}건</span>
-                  <span v-else class="comp-na">없음</span>
-                </td>
-                <td>
-                  <span v-if="p.pendingCRs > 0" class="change-status badge-warning">{{ p.pendingCRs }}건</span>
-                  <span v-else class="comp-na">없음</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-    </div>
-
-    <!-- 즉시 조치 필요 + 미해결 변경 요청 -->
-    <div class="dashboard-bottom-grid">
-
-      <!-- 즉시 조치 필요 -->
       <section class="table-section">
         <div class="table-header">
           <h3 class="section-title">즉시 조치 필요</h3>
@@ -222,7 +168,7 @@ function getCRStatusClass(s) { return { '진행 중': 'badge-warning', '검토 �
         <div v-else class="table-wrap">
           <table class="data-table">
             <thead>
-              <tr><th>AI명</th><th>제품</th><th>등급</th><th>조치 사유</th></tr>
+              <tr><th>AI 기능</th><th>제품</th><th>등급</th><th>조치 사유</th></tr>
             </thead>
             <tbody>
               <tr v-for="s in alertServices" :key="s.id" class="table-row" @click="onOpenDetail(s)">
@@ -245,30 +191,82 @@ function getCRStatusClass(s) { return { '진행 중': 'badge-warning', '검토 �
         </div>
       </section>
 
-      <!-- 최근 변경 이력 -->
       <section class="table-section">
         <div class="table-header">
-          <h3 class="section-title">최근 변경 이력</h3>
+          <h3 class="section-title">신규 AI 등록 요청</h3>
+          <button class="btn-link" @click="onNavigate('inventory')">
+            전체 보기
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
         </div>
-        <div class="table-wrap">
+        <div v-if="pendingRegistrations.length === 0" class="success-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+          <strong>검토 대기 중인 등록 요청이 없습니다.</strong>
+        </div>
+        <div v-else class="table-wrap">
           <table class="data-table">
             <thead>
-              <tr><th>날짜</th><th>제품</th><th>내용</th><th>상태</th></tr>
+              <tr><th>요청일</th><th>제품</th><th>AI 기능명</th><th>등급</th><th>상태</th></tr>
             </thead>
             <tbody>
-              <tr v-for="(c, i) in recentChanges" :key="i" class="table-row" @click="() => { const s = findService(c); if (s) onOpenDetail(s) }">
-                <td class="date-cell">{{ c.date }}</td>
-                <td><span class="product-tag-sm" :class="'product-' + c.product">{{ c.product }}</span></td>
-                <td>
-                  <div class="feature-cell">
-                    <span class="feature-name">{{ c.action }}</span>
-                    <span class="feature-desc">{{ c.desc }}</span>
-                  </div>
-                </td>
-                <td><span class="change-status" :class="getChangeStatusClass(c.status)">{{ c.status }}</span></td>
+              <tr v-for="r in pendingRegistrations" :key="r.id" class="table-row" @click="onNavigate('inventory')">
+                <td class="date-cell">{{ r.requestDate }}</td>
+                <td><span class="product-tag-sm" :class="'product-' + r.product">{{ r.product }}</span></td>
+                <td><span class="feature-name">{{ r.feature }}</span></td>
+                <td><span class="risk-badge" :class="getRiskClass(r.riskLevel)">{{ r.riskLevel }}</span></td>
+                <td><span class="reg-status reg-status-pending">검토 중</span></td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- AI 분류별 분포 + 제품별 거버넌스 -->
+    <div class="dashboard-bottom-grid">
+
+      <section class="table-section">
+        <h3 class="section-title" style="margin-bottom:20px">AI 분류별 분포</h3>
+        <div class="donut-wrap">
+          <svg class="donut-svg" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" :r="DONUT_R" fill="none" stroke="#E5E8EB" stroke-width="30"/>
+            <circle
+              v-for="s in donutSegments" :key="s.level"
+              cx="100" cy="100" :r="DONUT_R" fill="none"
+              :stroke="s.color" stroke-width="30"
+              :stroke-dasharray="s.dashArray"
+              :stroke-dashoffset="s.dashOffset"
+            />
+            <text x="100" y="93" text-anchor="middle" class="donut-center-num">{{ totalServices }}</text>
+            <text x="100" y="114" text-anchor="middle" class="donut-center-label">전체 서비스</text>
+          </svg>
+          <div class="donut-legend">
+            <div v-for="s in donutSegments" :key="s.level" class="donut-legend-item">
+              <span class="donut-dot" :style="{ background: s.color }"></span>
+              <span class="donut-legend-name">{{ s.level }}</span>
+              <span class="donut-legend-count">{{ s.count }}개</span>
+              <span class="donut-legend-pct">{{ Math.round(s.count / totalServices * 100) }}%</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="table-section">
+        <h3 class="section-title" style="margin-bottom:16px">규제 항목별 이행 현황</h3>
+        <div class="comp-item-list">
+          <div v-for="item in complianceItems" :key="item.key" class="comp-item-row">
+            <span class="comp-item-law">{{ item.law }}</span>
+            <span class="comp-item-label">{{ item.label }}</span>
+            <span
+              class="comp-item-count"
+              :class="complianceItemStats[item.key].rate === 100 ? 'comp-item-ok' : 'comp-item-fail'"
+            >
+              <svg v-if="complianceItemStats[item.key].rate === 100" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+              <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              {{ complianceItemStats[item.key].pass }}/{{ complianceItemStats[item.key].total }}개
+            </span>
+          </div>
         </div>
       </section>
 
